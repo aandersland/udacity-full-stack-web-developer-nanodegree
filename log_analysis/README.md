@@ -6,16 +6,16 @@ The report script will be written in Python and SQL. All the heavy lifting will 
 
 The report will answer the following questions according to the format in the examples below.
 
-What are the most popular three articles of all time? 
+1. What are the most popular three articles of all time? 
 * Example: "Princess Shellfish Marries Prince Handsome" — 1201 views
 
-Who are the most popular article authors of all time? 
+2. Who are the most popular article authors of all time? 
 * Example: Ursula La Multa — 2304 views
 
-On which days did more than 1% of requests lead to errors? 
+3. On which days did more than 1% of requests lead to errors? 
 * Example: July 29, 2016 — 2.5% errors
 
-##How to run the script
+## How to run the script
 You will need the following installed on your machine: 
 1. A linux based virtual machine if you do not have linux -  https://www.vagrantup.com/
 2. Postgress installed on the virtual machine
