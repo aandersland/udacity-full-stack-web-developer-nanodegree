@@ -1,0 +1,26 @@
+{% extends "main.html" %}
+{% block content %}
+{% include "header.html" %}
+<div>
+    <h2>Catalog</h2>
+</div>
+{% include "flash.html" %}
+<div>
+    <p class="catalog" id="catalog_id">{{catalog.id}}</p>
+    <p class="catalog" id="catalog_name">{{catalog.name}}</p>
+    <p class="catalog" id="catalog_description">{{catalog.description}}</p>
+</div>
+<div>
+    <a href="{{url_for('update_catalog',catalog_id = catalog.id)}}">
+        <button>Update Catalog</button>
+    </a>
+    <a href="{{url_for('delete_catalog', catalog_id = catalog.id)}}">
+        <button>Delete Catalog</button>
+    </a>
+    <a href="{{url_for('show_items', catalog_id = catalog.id)}}">
+        <button>Show Catalog Item</button>
+    </a>
+</div>
+{% endblock %}
+
+
