@@ -2,6 +2,7 @@ from sqlalchemy import Column, ForeignKey, Integer, String, DateTime
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from sqlalchemy import create_engine
+from passlib.apps import custom_app_context as pwd_context
 from datetime import datetime
 
 Base = declarative_base()
@@ -13,14 +14,23 @@ class User(Base):
     id = Column(Integer, primary_key=True)
     name = Column(String(100), nullable=False)
     email = Column(String(100))
+    username = Column(String(32), index=True)
+    password_hash = Column(String(64))
     # create_date = Column(DateTime, default=datetime.now(), onupdate=datetime.now(), nullable=False)
     # update_date = Column(DateTime, default=datetime.now(), onupdate=datetime.now(), nullable=False)
+
+    def hash_password(self, password):
+        self.password_hash = pwd_context.encrypt(password)
+
+    def verify_password(self, password):
+        return pwd_context.verify(password, self.password_hash)
 
     @property
     def serialize(self):
         return {
             'name': self.name,
             'id': self.id,
+            'username': self.username,
             'email': self.email,
             # 'create_date': self.create_date,
             # 'update_date': self.update_date

@@ -12,6 +12,7 @@ from oauth2client.client import flow_from_clientsecrets
 from oauth2client.client import FlowExchangeError
 import httplib2
 from flask import make_response
+from flask_httpauth import HTTPBasicAuth
 
 CLIENT_ID = json.loads(open('client_secrets.json', 'r').read())['web']['client_id']
 
@@ -24,6 +25,43 @@ Base.metadata.bind = engine
 
 DBSession = sessionmaker(bind=engine)
 session = DBSession()
+
+auth = HTTPBasicAuth()
+g = User()
+
+
+@auth.verify_password
+def verify_password(username, password):
+    user = session.query(User).filter_by(username=username).first()
+    if not user or not user.verify_password(password):
+        return False
+    g.user = user
+    return True
+
+
+# todo test this 14:3 securing your api / user registration
+@app.route('/users', methods=['POST'])
+def new_user():
+    username = request.json.get('username')
+    password = request.json.get('password')
+    name = request.json.get('name')
+    email = request.json.get('email')
+    if username is None or password is None:
+        abort(400)
+    if session.query(User).filter_by(username=username).first() is not None:
+        abort(400)
+    user = User(username=username, name=name, email=email)
+    user.hash_password(password)
+    session.add(user)
+    session.commit()
+    return jsonify({'username': user.username}), 201
+
+
+# todo test this 14:4 securing your api / protection
+@app.route('/protected_resource')
+@auth.login_required
+def get_resource():
+    return jsonify({'data': 'Hello, %s!' % g.user.username})
 
 
 @app.route('/login')
@@ -281,6 +319,13 @@ def api_category_books():
             categories_json[c]["Books"] = books_json
     return jsonify(Category=categories_json)
 
+
+# todo test
+@app.route('/users/api')
+def api_users():
+    users = session.query(User).order_by(User.username).all()
+    users_json = [i.serialize for i in users]
+    return jsonify(User=users_json)
 
 # The project implements a JSON endpoint that serves the same information as displayed in the HTML endpoints for an arbitrary book in the category.
 # Website reads category and book information from a database.
