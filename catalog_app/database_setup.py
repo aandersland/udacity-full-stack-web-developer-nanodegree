@@ -1,45 +1,82 @@
-from sqlalchemy import Column, ForeignKey, Integer, String
+from sqlalchemy import Column, ForeignKey, Integer, String, DateTime
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from sqlalchemy import create_engine
+from datetime import datetime
 
 Base = declarative_base()
 
 
-class Catalog(Base):
-    __tablename__ = 'catalog'
+class User(Base):
+    __tablename__ = 'user'
 
     id = Column(Integer, primary_key=True)
     name = Column(String(100), nullable=False)
-    description = Column(String(250), nullable=True)
+    email = Column(String(100))
+    # create_date = Column(DateTime, default=datetime.now(), onupdate=datetime.now(), nullable=False)
+    # update_date = Column(DateTime, default=datetime.now(), onupdate=datetime.now(), nullable=False)
 
     @property
     def serialize(self):
         return {
             'name': self.name,
             'id': self.id,
+            'email': self.email,
+            # 'create_date': self.create_date,
+            # 'update_date': self.update_date
         }
 
 
-class CatalogItem(Base):
-    __tablename__ = 'catalog_item'
+class Category(Base):
+    __tablename__ = 'category'
 
-    name = Column(String(100), nullable=False)
     id = Column(Integer, primary_key=True)
-    description = Column(String(250))
-    catalog_id = Column(Integer, ForeignKey('catalog.id'))
-    catalog = relationship(Catalog)
+    name = Column(String(100), nullable=False)
+    description = Column(String(500), nullable=True)
+    # create_date = Column(DateTime, default=datetime.now(), onupdate=datetime.now(), nullable=False)
+    # update_date = Column(DateTime, default=datetime.now(), onupdate=datetime.now(), nullable=False)
+    user_id = Column(Integer, ForeignKey('user.id'))
+    user = relationship(User)
 
     @property
     def serialize(self):
         return {
+            'id': self.id,
             'name': self.name,
             'description': self.description,
-            'id': self.id,
+            # 'create_date': self.create_date,
+            # 'update_date': self.update_date,
+            'user_id': self.user_id
         }
 
 
-engine = create_engine('sqlite:///catalog.db')
+class Book(Base):
+    __tablename__ = 'book'
+
+    id = Column(Integer, primary_key=True)
+    name = Column(String(100), nullable=False)
+    author = Column(String(100))
+    # create_date = Column(DateTime, default=datetime.now(), onupdate=datetime.now(), nullable=False)
+    # update_date = Column(DateTime, default=datetime.now(), onupdate=datetime.now(), nullable=False)
+    category_id = Column(Integer, ForeignKey('category.id'))
+    category = relationship(Category)
+    user_id = Column(Integer, ForeignKey('user.id'))
+    user = relationship(User)
+
+    @property
+    def serialize(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'author': self.author,
+            # 'create_date': self.create_date,
+            # 'update_date': self.update_date,
+            'category_id': self.category_id,
+            'user_id': self.user_id
+        }
+
+
+engine = create_engine('sqlite:///category.db')
 
 
 Base.metadata.create_all(engine)

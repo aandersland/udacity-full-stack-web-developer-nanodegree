@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, redirect, jsonify, url_for, flash
 from sqlalchemy import create_engine, asc
 from sqlalchemy.orm import sessionmaker
-from database_setup import Base, Catalog, CatalogItem
+from database_setup import Base, Category, Book, User
 from flask import session as login_session
 
 import requests
@@ -19,7 +19,7 @@ app = Flask(__name__)
 app.secret_key = 'super secret key'
 
 # connect to database
-engine = create_engine('sqlite:///catalog.db')
+engine = create_engine('sqlite:///category.db')
 Base.metadata.bind = engine
 
 DBSession = sessionmaker(bind=engine)
@@ -124,179 +124,167 @@ def gconnect():
     return output
 
 
+@app.route('/gdisconnect')
+def gdisconnect():
+    access_token = login_session.get('access_token')
+    if access_token is None:
+        print('Access Token is None')
+        response = make_response(json.dumps('Current user not connected.'), 401)
+        response.headers['Content-Type'] = 'application/json'
+        return response
+    print('In gdisconnect access token is %s', access_token)
+    print('User name is: ')
+    print(login_session['username'])
+    url = 'https://accounts.google.com/o/oauth2/revoke?token=%s' % login_session['access_token']
+    h = httplib2.Http()
+    result = h.request(url, 'GET')[0]
+    print('result is ')
+    print(result)
+    if result['status'] == '200':
+        del login_session['access_token']
+        del login_session['gplus_id']
+        del login_session['username']
+        del login_session['email']
+        del login_session['picture']
+        response = make_response(json.dumps('Successfully disconnected.'), 200)
+        response.headers['Content-Type'] = 'application/json'
+        return response
+    else:
+        response = make_response(json.dumps('Failed to revoke token for given user.'), 400)
+        response.headers['Content-Type'] = 'application/json'
+        return response
+
+
 @app.route('/', methods=['GET'])
-@app.route('/catalog/', methods=['GET'])
-def show_catalogs():
-    catalogs = session.query(Catalog).order_by(Catalog.name)
-    items = session.query(CatalogItem).order_by(CatalogItem.name).all()
-    return render_template('mainbody.html', catalogs=catalogs, items=items)
+# @app.route('/categories', methods=['GET'])
+def show_categories():
+    categories = session.query(Category).order_by(Category.name).all()
+    return render_template('home.html', categories=categories)
 
 
-@app.route('/catalog/search/', methods=['GET'])
-def search_catalog():
-    catalog_name = request.args.get('catalog_name')
-    catalog = session.query(Catalog).filter_by(name=catalog_name).first()
-    return render_template('catalog.html', catalog=catalog)
-
-
-@app.route('/catalog/<string:catalog_id>/', methods=['GET'])
-def show_catalog(catalog_id):
-    if catalog_id is not None:
-        catalog = session.query(Catalog).filter_by(id=catalog_id).first()
-    return render_template('catalog.html', catalog=catalog)
-
-
-@app.route('/catalog/create/', methods=['GET', 'POST'])
-def create_catalog():
+@app.route('/category/create/', methods=['GET', 'POST'])
+def create_category():
     if request.method == 'POST':
-        catalog = Catalog(name=request.form['name'], description=request.form['description'])
-        session.add(catalog)
+        category = Category(name=request.form['name'], description=request.form['description'])
+        session.add(category)
         session.commit()
-        flash('Catalog %s created.' % catalog.name)
-        return redirect(url_for('show_catalogs'))
+        flash('Created %s category.' % category.name)
+        return redirect(url_for('show_categories'))
     else:
-        return render_template('createcatalog.html')
+        return render_template('category_modify.html')
 
 
-@app.route('/catalog/<int:catalog_id>/update', methods=['GET', 'POST'])
-def update_catalog(catalog_id):
-    catalog = session.query(Catalog).filter_by(id=catalog_id).one()
+@app.route('/category/<int:category_id>/update', methods=['GET', 'POST'])
+def update_category(category_id):
+    category = session.query(Category).filter_by(id=category_id).one()
     if request.method == 'POST':
         if request.form['name']:
-            catalog.name = request.form['name']
+            category.name = request.form['name']
         if request.form['description']:
-            catalog.description = request.form['description']
-            flash('Catalog %s is updated.' % catalog.name)
-        return redirect(url_for('show_catalogs'))
+            category.description = request.form['description']
+            flash('Updated %s category.' % category.name)
+        return redirect(url_for('show_category_books', category_id=category_id))
     else:
-        return render_template('updatecatalog.html', catalog_id=catalog_id, catalog=catalog)
+        return render_template('category_modify.html', category_id=category_id, category=category)
 
 
-@app.route('/catalog/<int:catalog_id>/delete', methods=['GET', 'POST'])
-def delete_catalog(catalog_id):
-    catalog = session.query(Catalog).filter_by(id=catalog_id).one()
+@app.route('/category/<int:category_id>/delete', methods=['GET', 'POST'])
+def delete_category(category_id):
+    category = session.query(Category).filter_by(id=category_id).one()
+    books = session.query(Book).filter_by(category_id=category_id).all()
     if request.method == 'POST':
-        if catalog is not None:
-            session.delete(catalog)
-            flash('%s successfully deleted.' % catalog.name)
+        if category is not None:
+            for book in books:
+                session.delete(book)
+                flash('Deleted %s book..' % book.name)
+                session.commit()
+            session.delete(category)
+            flash('Deleted %s category.' % category.name)
             session.commit()
-        return redirect(url_for('show_catalogs'))
+        return redirect(url_for('show_categories'))
     else:
-        return render_template('deletecatalog.html', catalog_id=catalog_id, catalog=catalog)
+        return render_template('category_delete.html', category=category, books=books)
 
 
-# @app.route('/catalog/<int:catalog_id>/')
-@app.route('/catalog/<int:catalog_id>/items', methods=['GET'])
-def show_items(catalog_id):
-    catalog = session.query(Catalog).filter_by(id=catalog_id).one()
-    items = session.query(CatalogItem).filter_by(catalog_id=catalog_id).all()
-    return render_template('catalogitems.html', catalog_id=catalog_id, catalog=catalog, catalog_items=items)
+@app.route('/category/<int:category_id>/book', methods=['GET'])
+def show_category_books(category_id):
+    category = session.query(Category).filter_by(id=category_id).first()
+    books = session.query(Book).filter_by(category_id=category_id).order_by(Book.name).all()
+    # return render_template('category_books.html', category=category, books=books)
+    return render_template('category_books.html', category=category, books=books)
 
 
-@app.route('/catalog/<int:catalog_id>/item/<int:item_id>', methods=['GET'])
-def show_item(catalog_id, item_id):
-    catalog = session.query(Catalog).filter_by(id=catalog_id).one()
-    item = session.query(CatalogItem).filter_by(catalog_id=catalog_id, id=item_id).first()
-    return render_template('catalogitem.html', catalog_id=catalog_id, catalog=catalog, catalog_item=item)
-
-
-@app.route('/catalog/<int:catalog_id>/item/create', methods=['GET', 'POST'])
-def create_item(catalog_id):
-    catalog = session.query(Catalog).filter_by(id=catalog_id).one()
+@app.route('/category/<int:category_id>/book/create', methods=['GET', 'POST'])
+def create_book(category_id):
     if request.method == 'POST':
-        catalogitem = CatalogItem(name=request.form['name'], description=request.form['description'],
-                                  catalog_id=catalog_id)
-        session.add(catalogitem)
+        book = Book(name=request.form['name'], author=request.form['author'], category_id=category_id, user_id=1)
+        session.add(book)
         session.commit()
-        flash('%s item is created.' % catalogitem.name)
-        return redirect(url_for('show_items', catalog_id=catalog_id))
+        flash('Created %s book.' % book.name)
+        return redirect(url_for('show_category_books', category_id=category_id))
     else:
-        return render_template('createcatalogitem.html', catalog_id=catalog_id)
+        return render_template('book_modify.html', category_id=category_id)
 
 
-@app.route('/catalog/<int:catalog_id>/item/<int:item_id>/update', methods=['GET', 'POST'])
-def update_item(catalog_id, item_id):
-    catalog = session.query(Catalog).filter_by(id=catalog_id).one()
-    item = session.query(CatalogItem).filter_by(id=item_id).one()
+@app.route('/category/<int:category_id>/book/<int:book_id>/update', methods=['GET', 'POST'])
+def update_book(category_id, book_id):
+    book = session.query(Book).filter_by(id=book_id).one()
 
     if request.method == 'POST':
         if request.form['name']:
-            item.name = request.form['name']
-        if request.form['description']:
-            item.description = request.form['description']
-        session.add(item)
+            book.name = request.form['name']
+        if request.form['author']:
+            book.author = request.form['author']
+        session.add(book)
         session.commit()
-        flash('Catalog item successfully updated.')
-        return redirect(url_for('show_items', catalog_id=catalog_id))
+        flash('Updated %s book.' % book.name)
+        return redirect(url_for('show_category_books', category_id=category_id))
     else:
-        return render_template('updatecatalogitem.html', catalog_id=catalog_id, item_id=item_id, item=item)
+        return render_template('book_modify.html', category_id=category_id, book=book)
 
 
-@app.route('/catalog/<int:catalog_id>/item/<int:item_id>/delete', methods=['GET', 'POST'])
-def delete_item(catalog_id, item_id):
-    catalog = session.query(Catalog).filter_by(id=catalog_id).one()
-    item = session.query(CatalogItem).filter_by(id=item_id).one()
+@app.route('/category/<int:category_id>/book/<int:book_id>/delete', methods=['GET', 'POST'])
+def delete_book(category_id, book_id):
+    book = session.query(Book).filter_by(id=book_id).one()
     if request.method == 'POST':
-        session.delete(item)
+        session.delete(book)
         session.commit()
-        flash('Catalog item successfully deleted.')
-        return redirect(url_for('show_items', catalog_id=catalog_id))
+        flash('Deleted %s book.' % book.name)
+        return redirect(url_for('show_category_books', category_id=category_id))
     else:
-        return render_template('deletecatalogitem.html', catalog_id=catalog_id, item=item)
+        return render_template('book_delete.html', category_id=category_id, book=book)
 
 
-# api json routes
-@app.route('/catalog/api')
-def json_catalogs():
-    catalogs = session.query(Catalog).all()
-    catalogs_json = [c.serialize for c in catalogs]
-    for c in range(len(catalogs_json)):
-        items = session.query(CatalogItem).filter_by(catalog_id=catalogs_json[c]['id']).all()
-        items_json = [i.serialize for i in items]
-
-        if len(items_json) != 0:
-            catalogs_json[c]["CatalogItem"] = items_json
-
-    return jsonify(Catalog=catalogs_json)
+@app.route('/categories/api')
+def api_categories():
+    categories = session.query(Category).order_by(Category.name).all()
+    categories_json = [c.serialize for c in categories]
+    return jsonify(Category=categories_json)
 
 
-@app.route('/items/api')
-def json_items():
-    items = session.query(CatalogItem).all()
-    items_json = [c.serialize for c in items]
-    return jsonify(CatalogItem=items_json)
+@app.route('/books/api')
+def api_books():
+    books = session.query(Book).order_by(Book.name).all()
+    books_json = [i.serialize for i in books]
+    return jsonify(Book=books_json)
 
 
-@app.route('/catalogs/api/<string:category_name>')
-def json_get_catalog(category_name):
-    catalog = session.query(Catalog).filter_by(name=category_name).one_or_none()
-    catalog_json = None
-    if catalog is not None:
-        catalog_json = catalog.serialize
+@app.route('/category/books/api')
+def api_category_books():
+    categories = session.query(Category).order_by(Category.name).all()
+    categories_json = [c.serialize for c in categories]
+    for c in range(len(categories_json)):
+        books = session.query(Book).filter_by(category_id=categories_json[c]['id']).all()
+        books_json = [i.serialize for i in books]
 
-        items = session.query(CatalogItem).filter_by(catalog_id=catalog_json['id']).all()
-        items_json = [i.serialize for i in items]
-
-        if len(items) != 0:
-            catalog_json["CatalogItem"] = items_json
-
-    return jsonify(Catalog=catalog_json)
+        if len(books_json) != 0:
+            categories_json[c]["Books"] = books_json
+    return jsonify(Category=categories_json)
 
 
-@app.route('/catalogs/api/<string:category_name>/<string:item_name>')
-def json_get_item(category_name, item_name):
-    catalog = session.query(Catalog).filter_by(name=category_name).one_or_none()
-    if catalog is not None:
-        item = session.query(CatalogItem).filter_by(catalog_id=catalog.id, name=item_name).one_or_none()
-        if item is not None:
-            item_json = item.serialize
-
-    return jsonify(CatalogItem=item_json)
-
-
-# The project implements a JSON endpoint that serves the same information as displayed in the HTML endpoints for an arbitrary item in the catalog.
-# Website reads category and item information from a database.
-# Website includes a form allowing users to add new items and correctly processes submitted forms.
+# The project implements a JSON endpoint that serves the same information as displayed in the HTML endpoints for an arbitrary book in the category.
+# Website reads category and book information from a database.
+# Website includes a form allowing users to add new books and correctly processes submitted forms.
 # Website does include a form to edit/update a current record in the database table and correctly processes submitted forms.
 # Website does include a function to delete a current record.
 # todo Create, delete and update operations do consider authorization status prior to execution.
@@ -305,6 +293,7 @@ def json_get_item(category_name, item_name):
 # todo Code is ready for personal review and neatly formatted and compliant with the Python PEP 8 style guide.
 # todo Comments are present and effectively explain longer code procedures.
 # todo README file includes details of all the steps required to successfully run the application.
+
 
 if __name__ == '__main__':
     app.debug = True

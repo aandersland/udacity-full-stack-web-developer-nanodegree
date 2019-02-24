@@ -1,0 +1,24 @@
+{% extends "main.html" %}
+{% block content %}
+<nav class="column left" id="nav-bar">
+    <h3>Categories</h3>
+    {% if categories %}
+    {% for category in categories %}
+    <a href="{{url_for('show_category_books', category_id=category.id)}}">
+        <div>
+            <h3>{{category.name}}</h3>
+        </div>
+    </a>
+    {% endfor %}
+                <a href="{{url_for('create_category')}}">
+                <button type="submit" id="create">Create Category</button>
+            </a>
+    {% include "flash.html" %}
+    {% endif %}
+</nav>
+<div>
+    <div class="column right">
+        <h3>???</h3>
+    </div>
+</div>
+{% endblock %}

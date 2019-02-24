@@ -1,0 +1,53 @@
+{% extends "main.html" %}
+{% block content %}
+<div >
+    <a href="{{url_for('show_categories')}}">
+        <h3>Category</h3></a>
+    {% if category %}
+    <div>
+        <form action="{{url_for('update_category', category_id = category.id)}}" method="POST">
+            <div>
+                <label>Name:</label>
+                <input type="text" maxlength="100" name="name" value="{{category.name}}">
+            </div>
+            <div>
+                <label>Description:</label>
+                <input type="text" maxlength="500" name="description"
+                       value="{{category.description}}">
+            </div>
+            <br>
+            <div>
+                <!--todo bug fix the flash message for forms using multiple submits for different url_for-->
+                    <button type="submit" id="update_save">Save</button>
+                    <button type="submit" href="{{url_for('delete_category', category_id = category.id)}}" method="POST">Delete</button>
+                <a href="{{url_for('show_category_books', category_id = category.id)}}" method="GET">
+                    <button type="sumbit">Cancel</button>
+                </a>
+            </div>
+        </form>
+    </div>
+    {% else %}
+    <div>
+        <form action="{{url_for('create_category')}}" method="POST">
+            <div>
+                <label>Name:</label>
+                <input type="text" maxlength="100" name="name">
+            </div>
+            <div>
+                <label>Description:</label>
+                <input type="text" maxlength="500" name="description">
+            </div>
+            <br>
+            <div>
+                <a action="{{url_for('create_category')}}" method="POST">
+                    <button type="submit" id="new_save">Save</button>
+                </a>
+                <a href="{{url_for('show_categories')}}" method="GET">
+                    <button>Cancel</button>
+                </a>
+            </div>
+        </form>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

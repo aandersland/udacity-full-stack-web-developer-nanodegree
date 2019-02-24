@@ -18,7 +18,7 @@
     <h3>Items</h3>
     {% if items %}
     {% for item in items %}
-    <a href="{{url_for('show_items', catalog_id=catalog.id)}}">
+    <a href="{{url_for('show_items', catalog_id=catalog.id, item_id=item.id)}}">
         <div>
             <h3>{{item.id}} - {{item.name}} - {{item.description}}</h3>
         </div>

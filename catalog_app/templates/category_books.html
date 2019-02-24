@@ -1,0 +1,46 @@
+{% extends "main.html" %}
+{% block content %}
+<div class="column left" id="category-container">
+    <h3>{{category.name}}</h3>
+    {% if category %}
+    <div>
+        <div>{{category.description}}</div>
+        <br>
+        <div><a href="{{url_for('update_category', category_id=category.id)}}">
+            <button type="submit" id="category_save">Edit</button>
+        </a>
+            <a href="{{url_for('delete_category', category_id=category.id)}}">
+            <button type="submit" id="category_delete">Delete</button>
+        </a>
+            <br><br>
+            {% include "flash.html" %}
+        </div>
+    </div>
+    </a>
+    {% endif %}
+</div>
+<div class="column right" id="item-container">
+    <h3>Books</h3>
+    {% if books %}
+    {% for book in books %}
+    <div>
+        <ul>{{book.name}} -
+            {{book.author}}
+            <a href="{{url_for('update_book', category_id=category.id, book_id=book.id)}}">
+                <button type="submit" id="book_save">Edit</button>
+            </a>
+                    </a>
+            <a href="{{url_for('delete_book', category_id=category.id, book_id=book.id)}}">
+            <button type="submit" id="book_delete">Delete</button>
+        </a>
+        </ul>
+    </div>
+    </a>
+    {% endfor %}
+    {% endif %}
+    <a href="{{url_for('create_book', category_id=category.id)}}">
+        <button type="submit" id="create">Create Book</button>
+    </a>
+
+</div>
+{% endblock %}

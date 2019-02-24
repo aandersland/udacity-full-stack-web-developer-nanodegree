@@ -14,3 +14,4 @@ pip install beautifulsoup4 --user
 https://htmlcheatsheet.com/css/
 https://www.cssbasics.com/
 https://www.w3schools.com
+https://docs.sqlalchemy.org/en/latest/core/defaults.html

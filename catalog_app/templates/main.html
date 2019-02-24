@@ -1,14 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>Catalog App</title>
+    <title>Book Catalog</title>
     <link rel=stylesheet type=text/css href="{{url_for('static', filename='styles.css')}}">
 </head>
 <body>
 <nav class="nav-bar">
     <div>
-        <a class="nav-bar" href="{{url_for('show_catalogs')}}">Catalog App</a>
-        <a class="nav-bar" href="{{url_for('login')}}">
+        <a class="column left"  href="{{url_for('show_categories')}}">Book Catalog</a>
+    </div>
+    <div>
+         <a class="column right"  href="{{url_for('login')}}">
             <button id="login-button">Login</button>
         </a>
     </div>

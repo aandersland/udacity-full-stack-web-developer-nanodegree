@@ -1,6 +1,4 @@
-body {
-}
-.nav-bar {
+#nav-bar {
     font-family: "Comic Sans MS", cursive, sans-serif;
     font-size: 30px;
     letter-spacing: 2px;
@@ -13,9 +11,7 @@ body {
     text-transform: capitalize;
     background-color: #373737
 }
-#main-block {
 
-}
 .column {
     float: left;
 }

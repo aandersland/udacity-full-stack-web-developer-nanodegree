@@ -105,3 +105,4 @@ venv.bak/
 
 .idea/
 client_secrets.json
+catalog.db
