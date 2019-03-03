@@ -1,0 +1,52 @@
+{% extends "main.html" %}
+{% block content1 %}
+<h3>{{category.name}}</h3>
+{% if category %}
+<p>{{category.description}}</p>
+
+<div style="display: grid; grid-template-columns: repeat(2, 1fr)">
+    {% if 'username' in session %}
+    <a href="{{url_for('update_category', category_id=category.id)}}">
+        <button type="submit" id="category_save">Edit</button>
+    </a>
+    <form action="{{url_for('delete_category', category_id=category.id)}}" method="POST">
+        <a>
+            <button>Delete</button>
+        </a>
+    </form>
+    {% endif %}
+</div>
+</a>
+{% endif %}
+{% endblock content1 %}
+
+{% block content2 %}
+<h3>Books</h3>
+{% if books %}
+{% for book in books %}
+<div style="display: grid; grid-template-columns: repeat(6, 1fr)">
+    <div style="grid-column: span 4">{{book.name}} - {{book.author}}</div>
+    {% if 'username' in session %}
+    <div><a href=" {{url_for('update_book', category_id=category.id, book_id=book.id)}}">
+        <button type="submit" id="book_save">Edit</button>
+    </a></div>
+    <div>
+        <form action="{{url_for('delete_book', category_id=category.id, book_id=book.id)}}" method="POST">
+            <a>
+                <button>Delete</button>
+            </a>
+        </form>
+    </div>
+    {% endif %}
+</div>
+{% endfor %}
+{% endif %}
+<br></br>
+{% if category %}
+{% if 'username' in session %}
+<a href="{{url_for('create_book', category_id=category.id)}}">
+    <button type="submit" id="book_create">Create</button>
+</a>
+{% endif %}
+{% endif %}
+{% endblock content2 %}

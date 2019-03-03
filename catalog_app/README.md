@@ -1,0 +1,54 @@
+## Overview
+This project is focused on developing a web application with a backend database. It will include user registration, and authentication system. Users will be able to create, edit, and delete items if they are logged in.
+* RESTful web application
+* Python Flask framework
+* Third-party OAuth authentication
+* HTTP methods
+* Database CRUD operations
+* JSON endpoints
+
+## Setup
+You will need the following installed on your machine: 
+1. Install VirtualBox - https://www.virtualbox.org/wiki/Downloads
+2. A linux based virtual machine if you do not have linux -  https://www.vagrantup.com/
+3. A copy of the Vagrant file from Udacity located in this repository.
+4. The python files in this repository.
+5. Your folder structure should look like the example below.
+6. Once your folders are setup navigate to the root_folder and run the command **vagrant up** to setup your virtual machine.
+7. After it finishes installing the components you can run **vagrant ssh** to access the virtual machine.
+8. Once in the vm run **cd /vagrant**. This will navigate to the shared folder on your computer where the files are located.
+9. Next run this command ** python database_setup.py** to create the category database.
+10. Next run this command ** python category_books.py** to populate the category database with sample data.
+11. Finally run the command **python application.py** to start the website. Python 2.7 was used in the creation of this script.
+12. In your web browser navigate to the following url: http://localhost:5000/
+
+## Folder Structure
+ * root_folder/
+ * root_folder/catalog_app
+ * root_folder/catalog_app/application.py
+ * root_folder/catalog_app/category.db
+ * root_folder/catalog_app/category_books.py
+ * root_folder/catalog_app/client_secrets.json
+ * root_folder/catalog_app/Vagrantfile
+ * root_folder/catalog_app/static
+ * root_folder/catalog_app/templates
+ * root_folder/catalog_app/
+
+## JSON Endpoints
+/categories/api - list all categories
+/books/api - list all books
+/category/books/api - list all category books
+/users/api - list all users
+
+## Resources
+* https://htmlcheatsheet.com/css/
+* https://www.cssbasics.com/
+* https://www.w3schools.com
+* https://docs.sqlalchemy.org/en/latest/core/defaults.html
+* https://html-css-js.com/css/editor/
+* https://htmlcheatsheet.com/css/
+* https://www.cssbasics.com/introduction-to-css/
+* http://jinja.pocoo.org/docs/2.10/templates/
+* https://medium.freecodecamp.org/css-grid-a-simple-layout-design-tutorial-5312a4a8bcaf
+* https://alligator.io/css/align-justify/
+* https://www.w3schools.com/tags/tag_textarea.asp
