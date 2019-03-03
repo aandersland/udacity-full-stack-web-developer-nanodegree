@@ -9,7 +9,11 @@
     <a href="{{url_for('update_category', category_id=category.id)}}">
         <button type="submit" id="category_save">Edit</button>
     </a>
-    {% include 'delete_category_button.html' %}
+    <form action="{{url_for('delete_category', category_id=category.id)}}" method="POST">
+        <a>
+            <button>Delete</button>
+        </a>
+    </form>
     {% endif %}
 </div>
 </a>
@@ -26,7 +30,13 @@
     <div><a href=" {{url_for('update_book', category_id=category.id, book_id=book.id)}}">
         <button type="submit" id="book_save">Edit</button>
     </a></div>
-    <div>{% include 'delete_book_button.html' %}</div>
+    <div>
+        <form action="{{url_for('delete_book', category_id=category.id, book_id=book.id)}}" method="POST">
+            <a>
+                <button>Delete</button>
+            </a>
+        </form>
+    </div>
     {% endif %}
 </div>
 {% endfor %}

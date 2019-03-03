@@ -1,4 +1,5 @@
-from flask import Flask, render_template, request, redirect, jsonify, url_for, flash
+from flask import Flask, render_template, request
+from flask import redirect, jsonify, url_for, flash
 from sqlalchemy import create_engine, asc
 from sqlalchemy.orm import sessionmaker
 from database_setup import Base, Category, Book, User
@@ -14,7 +15,8 @@ import httplib2
 from flask import make_response
 from flask_httpauth import HTTPBasicAuth
 
-CLIENT_ID = json.loads(open('client_secrets.json', 'r').read())['web']['client_id']
+CLIENT_ID = json.loads(open('client_secrets.json', 'r')
+                       .read())['web']['client_id']
 
 app = Flask(__name__)
 app.secret_key = 'super secret key'
@@ -32,6 +34,12 @@ g = User()
 
 @auth.verify_password
 def verify_password(username, password):
+    """
+    Method to verify password from database when using local authentication.
+    :param username: Value to lookup.
+    :param password: Value to verify.
+    :return: Boolean
+    """
     user = session.query(User).filter_by(username=username).first()
     if not user or not user.verify_password(password):
         return False
@@ -39,9 +47,12 @@ def verify_password(username, password):
     return True
 
 
-# todo test this 14:3 securing your api / user registration
 @app.route('/users', methods=['POST'])
 def new_user():
+    """
+    Method to create a new user if not found.
+    :return: JSON object with username.
+    """
     username = request.json.get('username')
     password = request.json.get('password')
     name = request.json.get('name')
@@ -57,15 +68,22 @@ def new_user():
     return jsonify({'username': user.username}), 201
 
 
-# todo test this 14:4 securing your api / protection
 @app.route('/protected_resource')
 @auth.login_required
 def get_resource():
+    """
+    Method to test local authentication.
+    :return: JSON object with message/username.
+    """
     return jsonify({'data': 'Hello, %s!' % g.user.username})
 
 
 @app.route('/login')
 def login():
+    """
+    Method to create a random string for authentication.
+    :return: Returns the login.html page and state set with a random string.
+    """
     state = ''.join(random.choice(string.ascii_uppercase + string.digits)
                     for x in range(32))
     login_session['state'] = state
@@ -74,12 +92,20 @@ def login():
 
 @app.route('/clearSession')
 def clear_session():
+    """
+    Method to clear the login session for local testing.
+    :return: String message.
+    """
     login_session.clear()
     return "Session cleared"
 
 
 @app.route('/gconnect', methods=['POST'])
 def gconnect():
+    """
+    Udacity method to enable google authentication.
+    :return: Welcome page upon success and redirected to the home page.
+    """
     # Validate state token
     if request.args.get('state') != login_session['state']:
         response = make_response(json.dumps('Invalid state parameter.'), 401)
@@ -130,8 +156,8 @@ def gconnect():
     stored_access_token = login_session.get('access_token')
     stored_gplus_id = login_session.get('gplus_id')
     if stored_access_token is not None and gplus_id == stored_gplus_id:
-        response = make_response(json.dumps('Current user is already connected.'),
-                                 200)
+        response = make_response(json.dumps('Current user is already '
+                                            'connected.'), 200)
         response.headers['Content-Type'] = 'application/json'
         return response
 
@@ -151,13 +177,17 @@ def gconnect():
     login_session['email'] = data['email']
 
     # check if user exists otherwise create a new user
-    user_email = session.query(User).filter_by(email=login_session['email']).one_or_none()
+    user_email = session.query(User)\
+        .filter_by(email=login_session['email']).one_or_none()
     if not user_email:
-        user = User(username=login_session['username'], picture=login_session['picture'], email=login_session['email'])
+        user = User(username=login_session['username'],
+                    picture=login_session['picture'],
+                    email=login_session['email'])
         session.add(user)
         session.commit()
         flash('Created %s user.' % user.email)
-        login_session['id'] = session.query(User).filter_by(email=user.email).one_or_none()
+        login_session['id'] = session.query(User)\
+            .filter_by(email=user.email).one_or_none()
 
     output = ''
     output += '<h1>Welcome, '
@@ -165,7 +195,9 @@ def gconnect():
     output += '!</h1>'
     output += '<img src="'
     output += login_session['picture']
-    output += ' " style = "width: 100px; height: 100px;border-radius: 150px;-webkit-border-radius: 150px;-moz-border-radius: 150px;"> '
+    output += ' " style = "width: 100px; height: 100px;border-radius: ' \
+              '150px;-webkit-border-radius: 150px;-moz-border-radius: ' \
+              '150px;">'
     flash("you are now logged in as %s" % login_session['username'])
     print("done!")
     return output
@@ -173,17 +205,24 @@ def gconnect():
 
 @app.route('/gdisconnect')
 def gdisconnect():
+    """
+    Udacity method to disconnect from your google account
+    :return: Redirect to homepage without being logged in otherwise a
+    failure message.
+    """
     access_token = login_session.get('access_token')
     if access_token is None:
         print('Access Token is None')
-        response = make_response(json.dumps('Current user not connected.'), 401)
+        response = make_response(json.dumps('Current user not connected.'),
+                                 401)
         response.headers['Content-Type'] = 'application/json'
         # return response
         return redirect(url_for('show_categories'))
     print('In gdisconnect access token is %s', access_token)
     print('User name is: ')
     print(login_session['username'])
-    url = 'https://accounts.google.com/o/oauth2/revoke?token=%s' % login_session['access_token']
+    url = 'https://accounts.google.com/o/oauth2/revoke?token=%s' \
+          % login_session['access_token']
     h = httplib2.Http()
     result = h.request(url, 'GET')[0]
     print('result is ')
@@ -199,23 +238,32 @@ def gdisconnect():
         # return response
         return redirect(url_for('show_categories'))
     else:
-        response = make_response(json.dumps('Failed to revoke token for given user.'), 400)
+        response = make_response(json.dumps('Failed to revoke token for '
+                                            'given user.'), 400)
         response.headers['Content-Type'] = 'application/json'
         return response
 
 
 @app.route('/', methods=['GET'])
-# @app.route('/categories', methods=['GET'])
 def show_categories():
+    """
+    Method to show all existing categories.
+    :return: List of categories and a redirect to home.html.
+    """
     categories = session.query(Category).order_by(Category.name).all()
     return render_template('home.html', categories=categories)
 
 
 @app.route('/category/create/', methods=['GET', 'POST'])
-# @auth.login_required
 def create_category():
+    """
+    Method to create a new category.
+    :return: Redirect to show categories on a POST, otherwise a redirect
+     to category_modify.html.
+    """
     if request.method == 'POST':
-        category = Category(name=request.form['name'], description=request.form['description'])
+        category = Category(name=request.form['name'],
+                            description=request.form['description'])
         session.add(category)
         session.commit()
         flash('Created %s category.' % category.name)
@@ -225,8 +273,13 @@ def create_category():
 
 
 @app.route('/category/<int:category_id>/update', methods=['GET', 'POST'])
-# @auth.login_required
 def update_category(category_id):
+    """
+    Method to update a category.
+    :param category_id: Category id to be updated.
+    :return: Show the category and books on a POST, otherwise a redirect
+     to category_modify.html.
+    """
     category = session.query(Category).filter_by(id=category_id).one()
     if request.method == 'POST':
         if request.form['name']:
@@ -234,14 +287,21 @@ def update_category(category_id):
         if request.form['description']:
             category.description = request.form['description']
             flash('Updated %s category.' % category.name)
-        return redirect(url_for('show_category_books', category_id=category_id))
+        return redirect(url_for('show_category_books',
+                                category_id=category_id))
     else:
-        return render_template('category_modify.html', category_id=category_id, category=category)
+        return render_template('category_modify.html', category_id=category_id,
+                               category=category)
 
 
 @app.route('/category/<int:category_id>/delete', methods=['GET', 'POST'])
-# @auth.login_required
 def delete_category(category_id):
+    """
+    Method to delete a category and any associated books.
+    :param category_id: Category id to be deleted.
+    :return: Redirect to the homepage on a POST, otherwise a redirect
+     to category_delete.html.
+    """
     category = session.query(Category).filter_by(id=category_id).one()
     books = session.query(Book).filter_by(category_id=category_id).all()
     if request.method == 'POST':
@@ -255,34 +315,56 @@ def delete_category(category_id):
             session.commit()
         return redirect(url_for('show_categories'))
     else:
-        return render_template('category_delete.html', category=category, books=books)
+        return render_template('category_delete.html', category=category,
+                               books=books)
 
 
 @app.route('/category/<int:category_id>/book', methods=['GET'])
 def show_category_books(category_id):
+    """
+    Method to show a category and associated books.
+    :param category_id: Category id to be displayed.
+    :return: Redirect to the category/books page on a POST, otherwise a
+     redirect to book_modify.html.
+    """
     category = session.query(Category).filter_by(id=category_id).first()
-    books = session.query(Book).filter_by(category_id=category_id).order_by(Book.name).all()
-    # return render_template('category_books.html', category=category, books=books)
-    return render_template('category_books.html', category=category, books=books)
+    books = session.query(Book).filter_by(category_id=category_id)\
+        .order_by(Book.name).all()
+    return render_template('category_books.html', category=category,
+                           books=books)
 
 
 @app.route('/category/<int:category_id>/book/create', methods=['GET', 'POST'])
-# @auth.login_required
 def create_book(category_id):
+    """
+    Mehtod to create a new book in a category.
+    :param category_id: Category id the book should be linked too.
+    :return: Redirect to show the category and books on a POST, otherwise
+     a redirect to book_modify.html.
+    """
     category = session.query(Category).filter_by(id=category_id).first()
     if request.method == 'POST':
-        book = Book(name=request.form['name'], author=request.form['author'], category_id=category_id, user_id=1)
+        book = Book(name=request.form['name'], author=request.form['author'],
+                    category_id=category_id, user_id=1)
         session.add(book)
         session.commit()
         flash('Created %s book.' % book.name)
-        return redirect(url_for('show_category_books', category_id=category_id))
+        return redirect(url_for('show_category_books',
+                                category_id=category_id))
     else:
         return render_template('book_modify.html', category=category)
 
 
-@app.route('/category/<int:category_id>/book/<int:book_id>/update', methods=['GET', 'POST'])
-# @auth.login_required
+@app.route('/category/<int:category_id>/book/<int:book_id>/update',
+           methods=['GET', 'POST'])
 def update_book(category_id, book_id):
+    """
+    Method to updatte a book.
+    :param category_id: Category id the book is associated too.
+    :param book_id: Book id to be updated.
+    :return: Redirect to show the category/books on a POST, otherwise a
+    redirect to book_modify.html.
+    """
     category = session.query(Category).filter_by(id=category_id).one()
     book = session.query(Book).filter_by(id=book_id).one()
 
@@ -294,26 +376,36 @@ def update_book(category_id, book_id):
         session.add(book)
         session.commit()
         flash('Updated %s book.' % book.name)
-        return redirect(url_for('show_category_books', category_id=category_id))
+        return redirect(url_for('show_category_books',
+                                category_id=category_id))
     else:
-        return render_template('book_modify.html', category=category, book=book)
+        return render_template('book_modify.html', category=category,
+                               book=book)
 
 
-@app.route('/category/<int:category_id>/book/<int:book_id>/delete', methods=['GET', 'POST'])
-# @auth.login_required
+@app.route('/category/<int:category_id>/book/<int:book_id>/delete',
+           methods=['GET', 'POST'])
 def delete_book(category_id, book_id):
+    """
+    Method to delete a book.
+    :param category_id: Category id the book is associated to.
+    :param book_id: Book id to be deleted.
+    :return: Redirect to show the category/books.
+    """
     book = session.query(Book).filter_by(id=book_id).one()
     if request.method == 'POST':
         session.delete(book)
         session.commit()
         flash('Deleted %s book.' % book.name)
-        return redirect(url_for('show_category_books', category_id=category_id))
-    else:
-        return redirect(url_for('show_category_books', category_id=category_id))
+    return redirect(url_for('show_category_books', category_id=category_id))
 
 
 @app.route('/categories/api')
 def api_categories():
+    """
+    Method to display all the categories.
+    :return: JSON list of categories.
+    """
     categories = session.query(Category).order_by(Category.name).all()
     categories_json = [c.serialize for c in categories]
     return jsonify(Category=categories_json)
@@ -321,6 +413,10 @@ def api_categories():
 
 @app.route('/books/api')
 def api_books():
+    """
+    Method to display all the books.
+    :return: JSON list of all books.
+    """
     books = session.query(Book).order_by(Book.name).all()
     books_json = [i.serialize for i in books]
     return jsonify(Book=books_json)
@@ -328,10 +424,15 @@ def api_books():
 
 @app.route('/category/books/api')
 def api_category_books():
+    """
+    Method to display all categories and associated books.
+    :return: JSON list of categories/books.
+    """
     categories = session.query(Category).order_by(Category.name).all()
     categories_json = [c.serialize for c in categories]
     for c in range(len(categories_json)):
-        books = session.query(Book).filter_by(category_id=categories_json[c]['id']).all()
+        books = session.query(Book)\
+            .filter_by(category_id=categories_json[c]['id']).all()
         books_json = [i.serialize for i in books]
 
         if len(books_json) != 0:
@@ -339,24 +440,20 @@ def api_category_books():
     return jsonify(Category=categories_json)
 
 
-# todo test
 @app.route('/users/api')
 def api_users():
+    """
+    Method to display all users.
+    :return: JSON list of all users.
+    """
     users = session.query(User).order_by(User.email).all()
     users_json = [i.serialize for i in users]
     return jsonify(User=users_json)
 
-# The project implements a JSON endpoint that serves the same information as displayed in the HTML endpoints for an arbitrary book in the category.
-# Website reads category and book information from a database.
-# Website includes a form allowing users to add new books and correctly processes submitted forms.
-# Website does include a form to edit/update a current record in the database table and correctly processes submitted forms.
-# Website does include a function to delete a current record.
-# todo Create, delete and update operations do consider authorization status prior to execution.
-# todo Page implements a third-party authentication & authorization service (like Google Accounts or Mozilla Persona) instead of implementing its own authentication & authorization spec.
-# todo Make sure there is a 'Login' and 'Logout' button/link in the project. The aesthetics of this button/link is up to the discretion of the student.
-# todo Code is ready for personal review and neatly formatted and compliant with the Python PEP 8 style guide.
-# todo Comments are present and effectively explain longer code procedures.
-# todo README file includes details of all the steps required to successfully run the application.
+# todo Code is ready for personal review and neatly formatted and
+#  compliant with the Python PEP 8 style guide.
+# todo README file includes details of all the steps required to
+#  successfully run the application.
 
 
 if __name__ == '__main__':

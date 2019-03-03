@@ -21,13 +21,16 @@
         <div style="grid-column: span 6">
             <input type="text" class="form-control" maxlength="250" name="author" value="{{book.author}}">
         </div>
-        <!--<div style="grid-column: span 2">-->
     </div>
     <div>
-        {% include 'save_book_button.html' %}
+        <a>
+            <button>Save</button>
+        </a>
     </div>
 </form>
-{% include 'cancel_book_button.html' %}
+<a href="{{url_for('show_category_books', category_id=category.id)}}" method="GET">
+    <button>Cancel</button>
+</a>
 {% else %}
 <form action="{{url_for('create_book', category_id=category.id)}}" method="POST">
     <div style="display: grid; grid-template-columns: repeat(7, 1fr)">
@@ -45,12 +48,15 @@
         <div style="grid-column: span 6">
             <input type="text" class="form-control" maxlength="250" name="author" value="">
         </div>
-        <!--<div style="grid-column: span 2">-->
     </div>
     <div>
-        {% include 'save_book_button.html' %}
+        <a>
+            <button>Save</button>
+        </a>
     </div>
 </form>
-{% include 'cancel_book_button.html' %}
+<a href="{{url_for('show_category_books', category_id=category.id)}}" method="GET">
+    <button>Cancel</button>
+</a>
 {% endif %}
 {% endblock content1 %}

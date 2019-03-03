@@ -1,17 +1,20 @@
+nav {
+    background-color: #585858;
+    color: #E7691D;
+}
+
 .nav-login {
     justify-self: end;
 }
-.flash-message {
-    color #555555
-}
-#username {
 
+.nav-title {
+    color: #E7691D;
+}
+
+.flash-message {
+    color: #E7691D;
 }
 
 #picture {
     width: 35px;
-}
-
-#main-block {
-
 }
