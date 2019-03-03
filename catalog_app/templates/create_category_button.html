@@ -1,0 +1,7 @@
+{% if 'username' in session %}
+<form action="{{url_for('create_category')}}" method="POST">
+    <a>
+        <button type="submit" id="create">Create</button>
+    </a>
+</form>
+{% endif %}

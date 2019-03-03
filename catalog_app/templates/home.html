@@ -1,6 +1,5 @@
 {% extends "main.html" %}
-{% block content %}
-<nav class="column left" id="nav-bar">
+{% block content1 %}
     <h3>Categories</h3>
     {% if categories %}
     {% for category in categories %}
@@ -10,15 +9,12 @@
         </div>
     </a>
     {% endfor %}
-                <a href="{{url_for('create_category')}}">
-                <button type="submit" id="create">Create Category</button>
-            </a>
-    {% include "flash.html" %}
+    {% if 'username' in session %}
+    <a href="{{url_for('create_category')}}">
+        <button type="submit" id="create">Create Category</button>
+    </a>
     {% endif %}
-</nav>
-<div>
-    <div class="column right">
-        <h3>???</h3>
-    </div>
-</div>
-{% endblock %}
+    {% endif %}
+{% endblock content1 %}
+{% block content2 %}
+{% endblock content2 %}

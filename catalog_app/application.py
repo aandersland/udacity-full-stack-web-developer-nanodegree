@@ -150,13 +150,22 @@ def gconnect():
     login_session['picture'] = data['picture']
     login_session['email'] = data['email']
 
+    # check if user exists otherwise create a new user
+    user_email = session.query(User).filter_by(email=login_session['email']).one_or_none()
+    if not user_email:
+        user = User(username=login_session['username'], picture=login_session['picture'], email=login_session['email'])
+        session.add(user)
+        session.commit()
+        flash('Created %s user.' % user.email)
+        login_session['id'] = session.query(User).filter_by(email=user.email).one_or_none()
+
     output = ''
     output += '<h1>Welcome, '
     output += login_session['username']
     output += '!</h1>'
     output += '<img src="'
     output += login_session['picture']
-    output += ' " style = "width: 300px; height: 300px;border-radius: 150px;-webkit-border-radius: 150px;-moz-border-radius: 150px;"> '
+    output += ' " style = "width: 100px; height: 100px;border-radius: 150px;-webkit-border-radius: 150px;-moz-border-radius: 150px;"> '
     flash("you are now logged in as %s" % login_session['username'])
     print("done!")
     return output
@@ -169,7 +178,8 @@ def gdisconnect():
         print('Access Token is None')
         response = make_response(json.dumps('Current user not connected.'), 401)
         response.headers['Content-Type'] = 'application/json'
-        return response
+        # return response
+        return redirect(url_for('show_categories'))
     print('In gdisconnect access token is %s', access_token)
     print('User name is: ')
     print(login_session['username'])
@@ -186,7 +196,8 @@ def gdisconnect():
         del login_session['picture']
         response = make_response(json.dumps('Successfully disconnected.'), 200)
         response.headers['Content-Type'] = 'application/json'
-        return response
+        # return response
+        return redirect(url_for('show_categories'))
     else:
         response = make_response(json.dumps('Failed to revoke token for given user.'), 400)
         response.headers['Content-Type'] = 'application/json'
@@ -201,6 +212,7 @@ def show_categories():
 
 
 @app.route('/category/create/', methods=['GET', 'POST'])
+# @auth.login_required
 def create_category():
     if request.method == 'POST':
         category = Category(name=request.form['name'], description=request.form['description'])
@@ -213,6 +225,7 @@ def create_category():
 
 
 @app.route('/category/<int:category_id>/update', methods=['GET', 'POST'])
+# @auth.login_required
 def update_category(category_id):
     category = session.query(Category).filter_by(id=category_id).one()
     if request.method == 'POST':
@@ -227,6 +240,7 @@ def update_category(category_id):
 
 
 @app.route('/category/<int:category_id>/delete', methods=['GET', 'POST'])
+# @auth.login_required
 def delete_category(category_id):
     category = session.query(Category).filter_by(id=category_id).one()
     books = session.query(Book).filter_by(category_id=category_id).all()
@@ -253,7 +267,9 @@ def show_category_books(category_id):
 
 
 @app.route('/category/<int:category_id>/book/create', methods=['GET', 'POST'])
+# @auth.login_required
 def create_book(category_id):
+    category = session.query(Category).filter_by(id=category_id).first()
     if request.method == 'POST':
         book = Book(name=request.form['name'], author=request.form['author'], category_id=category_id, user_id=1)
         session.add(book)
@@ -261,11 +277,13 @@ def create_book(category_id):
         flash('Created %s book.' % book.name)
         return redirect(url_for('show_category_books', category_id=category_id))
     else:
-        return render_template('book_modify.html', category_id=category_id)
+        return render_template('book_modify.html', category=category)
 
 
 @app.route('/category/<int:category_id>/book/<int:book_id>/update', methods=['GET', 'POST'])
+# @auth.login_required
 def update_book(category_id, book_id):
+    category = session.query(Category).filter_by(id=category_id).one()
     book = session.query(Book).filter_by(id=book_id).one()
 
     if request.method == 'POST':
@@ -278,10 +296,11 @@ def update_book(category_id, book_id):
         flash('Updated %s book.' % book.name)
         return redirect(url_for('show_category_books', category_id=category_id))
     else:
-        return render_template('book_modify.html', category_id=category_id, book=book)
+        return render_template('book_modify.html', category=category, book=book)
 
 
 @app.route('/category/<int:category_id>/book/<int:book_id>/delete', methods=['GET', 'POST'])
+# @auth.login_required
 def delete_book(category_id, book_id):
     book = session.query(Book).filter_by(id=book_id).one()
     if request.method == 'POST':
@@ -290,7 +309,7 @@ def delete_book(category_id, book_id):
         flash('Deleted %s book.' % book.name)
         return redirect(url_for('show_category_books', category_id=category_id))
     else:
-        return render_template('book_delete.html', category_id=category_id, book=book)
+        return redirect(url_for('show_category_books', category_id=category_id))
 
 
 @app.route('/categories/api')
@@ -323,7 +342,7 @@ def api_category_books():
 # todo test
 @app.route('/users/api')
 def api_users():
-    users = session.query(User).order_by(User.username).all()
+    users = session.query(User).order_by(User.email).all()
     users_json = [i.serialize for i in users]
     return jsonify(User=users_json)
 

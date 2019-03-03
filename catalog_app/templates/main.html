@@ -5,19 +5,41 @@
     <link rel=stylesheet type=text/css href="{{url_for('static', filename='styles.css')}}">
 </head>
 <body>
-<nav class="nav-bar">
-    <div>
-        <a class="column left"  href="{{url_for('show_categories')}}">Book Catalog</a>
-    </div>
-    <div>
-         <a class="column right"  href="{{url_for('login')}}">
+<nav>
+    <div class="nav" style="display: grid; grid-template-columns: repeat(8, 1fr)">
+        {% if 'username' not in session %}
+        <div><a class="nav-title" style="grid-column: span 2" href="{{url_for('show_categories')}}">Book Catalog</a>
+        </div>
+        <div style="grid-column: span 5"></div>
+        <div class="nav-login"><a href="{{url_for('login')}}">
             <button id="login-button">Login</button>
+        </a></div>
+        {% else %}
+        <div style="grid-column: span 2"><a class="nav-title" href="{{url_for('show_categories')}}">Book Catalog</a>
+        </div>
+        <div style="grid-column: span 2"></div>
+        <div class="nav-login" id="username" style="grid-column: span 2">{{session['username']}}</div>
+        <div class="nav-login"><a><img id="picture" src="{{session['picture']}}"></a></div>
+        <div class="nav-login"><a href="{{url_for('gdisconnect')}}">
+            <button id="logout-button">Logout</button>
         </a>
+        </div>
+        {% endif %}
     </div>
 </nav>
-<div id="main-block">
-    {% block content %}
-    {% endblock %}
+<div class="flash-message">
+    {% include "flash.html" %}
+</div>
+
+<div id="main-block" style="display: grid; grid-template-columns: repeat(2, 1fr)">
+    <div>
+        {% block content1 %}
+        {% endblock content1%}
+    </div>
+    <div>
+        {% block content2 %}
+        {% endblock content2%}
+    </div>
 </div>
 </body>
 </html>

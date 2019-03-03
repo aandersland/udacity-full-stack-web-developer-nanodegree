@@ -15,3 +15,4 @@ https://htmlcheatsheet.com/css/
 https://www.cssbasics.com/
 https://www.w3schools.com
 https://docs.sqlalchemy.org/en/latest/core/defaults.html
+https://medium.freecodecamp.org/css-grid-a-simple-layout-design-tutorial-5312a4a8bcaf

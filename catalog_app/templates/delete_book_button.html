@@ -1,0 +1,7 @@
+{% if 'username' in session %}
+<form action="{{url_for('delete_book', category_id=category.id, book_id=book.id)}}" method="POST">
+    <a>
+        <button>Delete</button>
+    </a>
+</form>
+{% endif %}

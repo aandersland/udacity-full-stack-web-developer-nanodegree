@@ -1,46 +1,56 @@
 {% extends "main.html" %}
-{% block content %}
+{% block content1 %}
 <div>
     <h1>Update Book</h1>
 </div>
 <div></div>
-<!--{% include "flash.html" %}-->
 {% if book %}
-<div>
-    <div>
-        <form action="{{url_for('update_book', category_id=category_id, book_id = book.id)}}" method="POST">
-            <div>
-                <label>Name: {{book.id}}</label>
-                <label>Name:</label>
-            </div>
-            <div>
-                <input type="text" class="form-control" maxlength="100" name="name" value="{{book.name}}">
-                <label>Description:</label>
-            </div>
-            <div>
-                <input type="text" class="form-control" maxlength="250" name="author" value="{{book.author}}">
-                <button type="submit" id="book_submit">Update</button>
-            </div>
-        </form>
+<form action="{{url_for('update_book', category_id=category.id, book_id = book.id)}}" method="POST">
+    <div style="display: grid; grid-template-columns: repeat(7, 1fr)">
+        <div style="grid-column: span 1">
+            <label>Name:</label>
+        </div>
+        <div style="grid-column: span 6">
+            <input type="text" class="form-control" maxlength="100" name="name" value="{{book.name}}">
+        </div>
     </div>
-</div>
+    <div style="display: grid; grid-template-columns: repeat(7, 1fr)">
+        <div style="grid-column: span 1">
+            <label>Author:</label>
+        </div>
+        <div style="grid-column: span 6">
+            <input type="text" class="form-control" maxlength="250" name="author" value="{{book.author}}">
+        </div>
+        <!--<div style="grid-column: span 2">-->
+    </div>
+    <div>
+        {% include 'save_book_button.html' %}
+    </div>
+</form>
+{% include 'cancel_book_button.html' %}
 {% else %}
-<div>
-    <div>
-        <form action="{{url_for('create_book', category_id=category_id)}}" method="POST">
-            <div>
-                <label>Name:</label>
-                <input type="text" class="form-control" maxlength="100" name="name">
-            </div>
-            <div>
-                <label>Author:</label>
-                <input type="text" class="form-control" maxlength="250" name="author" >
-            </div>
-            <div>
-                <button type="submit" class="btn btn-default" id="new_submit">Update</button>
-            </div>
-        </form>
+<form action="{{url_for('create_book', category_id=category.id)}}" method="POST">
+    <div style="display: grid; grid-template-columns: repeat(7, 1fr)">
+        <div style="grid-column: span 1">
+            <label>Name:</label>
+        </div>
+        <div style="grid-column: span 6">
+            <input type="text" class="form-control" maxlength="100" name="name" value="">
+        </div>
     </div>
-</div>
+    <div style="display: grid; grid-template-columns: repeat(7, 1fr)">
+        <div style="grid-column: span 1">
+            <label>Author:</label>
+        </div>
+        <div style="grid-column: span 6">
+            <input type="text" class="form-control" maxlength="250" name="author" value="">
+        </div>
+        <!--<div style="grid-column: span 2">-->
+    </div>
+    <div>
+        {% include 'save_book_button.html' %}
+    </div>
+</form>
+{% include 'cancel_book_button.html' %}
 {% endif %}
-{% endblock %}
+{% endblock content1 %}

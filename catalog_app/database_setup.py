@@ -12,9 +12,10 @@ class User(Base):
     __tablename__ = 'user'
 
     id = Column(Integer, primary_key=True)
-    name = Column(String(100), nullable=False)
-    email = Column(String(100))
-    username = Column(String(32), index=True)
+    # name = Column(String(100))
+    email = Column(String(100), nullable=False, unique=True)
+    username = Column(String(32))
+    picture = Column(String(250))
     password_hash = Column(String(64))
     # create_date = Column(DateTime, default=datetime.now(), onupdate=datetime.now(), nullable=False)
     # update_date = Column(DateTime, default=datetime.now(), onupdate=datetime.now(), nullable=False)
@@ -28,10 +29,10 @@ class User(Base):
     @property
     def serialize(self):
         return {
-            'name': self.name,
             'id': self.id,
             'username': self.username,
             'email': self.email,
+            'picture': self.picture
             # 'create_date': self.create_date,
             # 'update_date': self.update_date
         }

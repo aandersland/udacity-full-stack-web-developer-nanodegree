@@ -1,23 +1,17 @@
-#nav-bar {
-    font-family: "Comic Sans MS", cursive, sans-serif;
-    font-size: 30px;
-    letter-spacing: 2px;
-    word-spacing: 2px;
-    color: #FF6116;
-    font-weight: 700;
-    text-decoration: none solid rgb(68, 68, 68);
-    font-style: normal;
-    font-variant: normal;
-    text-transform: capitalize;
-    background-color: #373737
+.nav-login {
+    justify-self: end;
+}
+.flash-message {
+    color #555555
+}
+#username {
+
 }
 
-.column {
-    float: left;
+#picture {
+    width: 35px;
 }
-.left {
-    width: 50%
-}
-.right {
-    width: 50%
+
+#main-block {
+
 }
