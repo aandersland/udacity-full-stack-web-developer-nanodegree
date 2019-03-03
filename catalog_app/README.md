@@ -23,22 +23,21 @@ You will need the following installed on your machine:
 12. In your web browser navigate to the following url: http://localhost:5000/
 
 ## Folder Structure
- * root_folder/
  * root_folder/catalog_app
- * root_folder/catalog_app/application.py
- * root_folder/catalog_app/category.db
- * root_folder/catalog_app/category_books.py
- * root_folder/catalog_app/client_secrets.json
- * root_folder/catalog_app/Vagrantfile
- * root_folder/catalog_app/static
- * root_folder/catalog_app/templates
- * root_folder/catalog_app/
-
+ * root_folder/catalog_app/application.py - main application
+ * root_folder/catalog_app/database_setup.py - initialization of database
+ * root_folder/catalog_app/category_books.py - populates database with sample data
+ * root_folder/catalog_app/category.db - database created from database_setup.py
+ * root_folder/catalog_app/client_secrets.json - secrets file (you provide)
+ * root_folder/catalog_app/Vagrantfile - file for the creation of a vm
+ * root_folder/catalog_app/static - contains css file
+ * root_folder/catalog_app/templates - contains html files
+ 
 ## JSON Endpoints
-/categories/api - list all categories
-/books/api - list all books
-/category/books/api - list all category books
-/users/api - list all users
+* /categories/api - list all categories
+* /books/api - list all books
+* /category/books/api - list all category books
+* /users/api - list all users
 
 ## Resources
 * https://htmlcheatsheet.com/css/
