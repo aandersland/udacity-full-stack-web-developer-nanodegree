@@ -7,7 +7,7 @@
         <div style="grid-column: span 2">
             <label>Name:</label></div>
         <div style="grid-column: span 5">
-            <input type="text" maxlength="100" name="name" value="{{category.name}}">
+            <input type="text" maxlength="100" name="name" value="{{category.name}}" required>
         </div>
     </div>
 
@@ -20,7 +20,6 @@
         </div>
     </div>
     <div>
-        <!--todo bug fix the flash message for forms using multiple submits for different url_for-->
         <a>
             <button type="submit" id="category_save">Save</button>
         </a>
@@ -37,7 +36,7 @@
         <div style="grid-column: span 2">
             <label>Name:</label></div>
         <div style="grid-column: span 5">
-            <input type="text" maxlength="100" name="name" value="">
+            <input type="text" maxlength="100" name="name" value="" required>
         </div>
     </div>
 

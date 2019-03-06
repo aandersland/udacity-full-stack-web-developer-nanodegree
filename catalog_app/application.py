@@ -179,12 +179,16 @@ def gconnect():
     # check if user exists otherwise create a new user
     user_email = session.query(User)\
         .filter_by(email=login_session['email']).one_or_none()
+
+    login_session['user_id'] = user_email.id
+
     if not user_email:
         user = User(username=login_session['username'],
                     picture=login_session['picture'],
                     email=login_session['email'])
         session.add(user)
         session.commit()
+
         flash('Created %s user.' % user.email)
         login_session['id'] = session.query(User)\
             .filter_by(email=user.email).one_or_none()
@@ -345,7 +349,7 @@ def create_book(category_id):
     category = session.query(Category).filter_by(id=category_id).first()
     if request.method == 'POST':
         book = Book(name=request.form['name'], author=request.form['author'],
-                    category_id=category_id, user_id=1)
+                    category_id=category_id, user_id=login_session['user_id'])
         session.add(book)
         session.commit()
         flash('Created %s book.' % book.name)
@@ -422,8 +426,30 @@ def api_books():
     return jsonify(Book=books_json)
 
 
+@app.route('/category/<int:category_id>/book/<int:book_id>/api')
+def api_category_books(category_id, book_id):
+    """
+    Method to display a category and associated books.
+    :return: JSON list of categories/books.
+    """
+    category = session.query(Category).filter_by(id=category_id).one_or_none()
+    if category is not None:
+        category_json = category.serialize
+        if len(category_json) != 0:
+            book = session.query(Book)\
+                .filter_by(category_id=category_id, id=book_id).one_or_none()
+            if book is not None:
+                book_json = book.serialize
+
+                if len(book_json) != 0:
+                    category_json["Books"] = book_json
+    else:
+        category_json = {}
+    return jsonify(Category=category_json)
+
+
 @app.route('/category/books/api')
-def api_category_books():
+def api_all_category_books():
     """
     Method to display all categories and associated books.
     :return: JSON list of categories/books.
