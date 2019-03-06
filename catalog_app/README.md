@@ -56,6 +56,7 @@ You will need the following installed on your machine:
 ## JSON Endpoints
 * /categories/api - list all categories
 * /books/api - list all books
+* /category/#/book/#/api - list a category and book
 * /category/books/api - list all category books
 * /users/api - list all users
 
