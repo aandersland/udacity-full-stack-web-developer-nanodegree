@@ -267,7 +267,8 @@ def create_category():
     """
     if request.method == 'POST':
         category = Category(name=request.form['name'],
-                            description=request.form['description'])
+                            description=request.form['description'],
+                            user_id=login_session['user_id'])
         session.add(category)
         session.commit()
         flash('Created %s category.' % category.name)
