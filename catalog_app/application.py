@@ -286,6 +286,11 @@ def update_category(category_id):
      to category_modify.html.
     """
     category = session.query(Category).filter_by(id=category_id).one()
+    if category.user_id != login_session['user_id']:
+        flash('''You are not authorized to edit this item.
+              Create your own item to edit.''')
+        return redirect(url_for('show_category_books',
+                                category_id=category_id))
     if request.method == 'POST':
         if request.form['name']:
             category.name = request.form['name']
@@ -309,6 +314,12 @@ def delete_category(category_id):
     """
     category = session.query(Category).filter_by(id=category_id).one()
     books = session.query(Book).filter_by(category_id=category_id).all()
+    if category.user_id != login_session['user_id']:
+        flash('''You are not authorized to edit this item.
+              Create your own item to edit.''')
+        return redirect(url_for('show_category_books',
+                                category_id=category_id))
+
     if request.method == 'POST':
         if category is not None:
             for book in books:
@@ -373,6 +384,12 @@ def update_book(category_id, book_id):
     category = session.query(Category).filter_by(id=category_id).one()
     book = session.query(Book).filter_by(id=book_id).one()
 
+    if book.user_id != login_session['user_id']:
+        flash('''You are not authorized to edit this item.
+              Create your own item to edit.''')
+        return redirect(url_for('show_category_books',
+                                category_id=category_id))
+
     if request.method == 'POST':
         if request.form['name']:
             book.name = request.form['name']
@@ -398,6 +415,13 @@ def delete_book(category_id, book_id):
     :return: Redirect to show the category/books.
     """
     book = session.query(Book).filter_by(id=book_id).one()
+
+    if book.user_id != login_session['user_id']:
+        flash('''You are not authorized to edit this item.
+              Create your own item to edit.''')
+        return redirect(url_for('show_category_books',
+                                category_id=category_id))
+
     if request.method == 'POST':
         session.delete(book)
         session.commit()
