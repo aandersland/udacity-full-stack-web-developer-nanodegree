@@ -6,7 +6,7 @@ This project is focused on taking a base installation of an Ubuntu 16.04 server 
 * Install and configure the database server
 * Deploy an existing web application [Project 2 - Catalog App](https://github.com/aandersland/udacity-full-stack-web-developer-nanodegree/tree/master/catalog_app)
 
-The running application cane be seen here: http://3.16.230.142/
+The running application can be seen here: http://3.16.230.142/
 
 # Setup
 ## Setup Amazon Lightsail Instance
