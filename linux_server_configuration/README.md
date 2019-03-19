@@ -6,6 +6,8 @@ This project is focused on taking a base installation of an Ubuntu 16.04 server 
 * Install and configure the database server
 * Deploy an existing web application [Project 2 - Catalog App](https://github.com/aandersland/udacity-full-stack-web-developer-nanodegree/tree/master/catalog_app)
 
+The running application cane be seen here: http://3.16.230.142/
+
 # Setup
 ## Setup Amazon Lightsail Instance
 This section will setup your initial instance, configure firewall rules, and set a static ip address.
@@ -60,6 +62,7 @@ This section will grant sudo access to the system accounts.
 14. Run **su - grader** and then enter the password
 
 ## Setup SSH keys for the Grader account
+This section will create the SSH keys and apply them on the server.
 1. Download Putty Key Generator and start the application
 2. Click on 'Generate' and follow the instructions to create a key
 3. Enter a passphrase
@@ -73,123 +76,125 @@ This section will grant sudo access to the system accounts.
     * ensure that PasswordAuthentication = no
 10. Run **sudo service ssh restart**
 
-Start the Putty Configuration app
-Enter the public pip address
-Change the port to 2200
-On the left panel click on SSH > Auth
-On the right panel browse to the **grader_private** file 
-On the left panel click on Session
-Enter a name in the Saved Session box **grader**
-Click on Save
-Click on Open
-Click on yes on the pop up window
-Enter username / password
+## Setup Putty SSH connection
+This section will setup an SSH connection to the new server.
+1. Download and Start the Putty Configuration app
+2. Enter the public ip address to your Catalog_App **3.16.230.142**
+3. Change the port to **2200**
+4. On the left panel click on 'SSH' and then 'Auth'
+5. On the right panel browse to the **grader_private** file you created earlier
+6. On the left panel click on 'Session'
+7. Enter a name in the Saved Session box **grader**
+8. Click on Save and then Open
+9. Click on 'yes' on the pop up window
+10. Enter username / password
 
 ##Configure UFW Firewall
-Run **sudo ufw default deny incoming**
-Run **sudo ufw default allow outgoing**
-Run **sudo ufw allow 2200/tcp**
-Run **sudo ufw allow www**
-Run **sudo ufw allow 123/udp**
-Run **sudo ufw deny 22**
-Run **sudo ufw enable**
-Type in Y for the warning that comes up.
-Run **sudo ufw status**
-Your output should look like this:
-Status: active
-
-To                         Action      From
---                         ------      ----
-2200/tcp                   ALLOW       Anywhere
-80/tcp                     ALLOW       Anywhere
-123/udp                    ALLOW       Anywhere
-22                         DENY        Anywhere
-2200/tcp (v6)              ALLOW       Anywhere (v6)
-80/tcp (v6)                ALLOW       Anywhere (v6)
-123/udp (v6)               ALLOW       Anywhere (v6)
-22 (v6)                    DENY        Anywhere (v6)
-Run **exit**
+This section will configure the server firewall to limit only necessary access and limit attack vectors for unauthorized attempts.
+1. Run **sudo ufw default deny incoming**
+2. Run **sudo ufw default allow outgoing**
+3. Run **sudo ufw allow 2200/tcp**
+4. Run **sudo ufw allow www**
+5. Run **sudo ufw allow 123/udp**
+6. Run **sudo ufw deny 22**
+7. Run **sudo ufw enable**
+8. Type in Y for the warning that comes up.
+9. Run **sudo ufw status**
+10. Your output should look like this:
+    * Status: active
+    
+    To                         Action      From
+    --                         ------      ----
+    2200/tcp                   ALLOW       Anywhere
+    80/tcp                     ALLOW       Anywhere
+    123/udp                    ALLOW       Anywhere
+    22                         DENY        Anywhere
+    2200/tcp (v6)              ALLOW       Anywhere (v6)
+    80/tcp (v6)                ALLOW       Anywhere (v6)
+    123/udp (v6)               ALLOW       Anywhere (v6)
+    22 (v6)                    DENY        Anywhere (v6)
+11. Run **exit**
 
 ## Update Lightsail instance - disable port 22
-Click on your Catalog_App instance
-Click on Networking
-Delete the following firewall rule:
-* SSH - TCP - 22
-Click Save
+This section will disable the normal SSH port on our server instance.
+1. Click on your 'Catalog_App' instance
+2. Click on 'Networking'
+3. Delete the following firewall rule:
+    * **SSH - TCP - 22**
+4. Click 'Save'
 
 ## Update server packages
-Run **sudo apt-get update**
-Run **sudo apt-get upgrade**
+This section will install the necessary server/library packages. 
+1. Run **sudo apt-get update**
+2. Run **sudo apt-get upgrade**
+3. Run **sudo apt-get install postgresql postgresql-contrib**
+4. Run **sudo apt-get install apache2**
+    * In a web browser type in your public ip address **3.16.230.142**
+    * You should see the "Apache2 Ubuntu Default Page"
+5. Run **sudo apt-get install libapache2-mod-wsgi python-dev**
+6. Run **sudo apt-get install python-pip**
+7. Run **sudo apt-get install virtualenv**
 
-##Install PostgreSql
-Run **sudo apt-get install postgresql postgresql-contrib**
+##Configure and setup database
+This section will setup access for our catalog_app user and create an empty database for use.
+1. Run **sudo su - postgres**
+2. Run **psql**
+3. Run **create role catalog_app with login password 'catalog_app';**
+4. Run **alter role catalog_app createdb;**
+5. Run **\q**
+6. Run **exit**
+7. Run **su - catalog_app**
+8. Run **createdb catalog_app**
 
+##Setup application and reconfigure
+This section will move our application to our server and update it to work with postgresql and the apache/wsgi service.
+1. Run **cd /var/www/**
+2. Run **sudo git clone https://github.com/aandersland/udacity-full-stack-web-developer-nanodegree.git catalog_app**
+3. Run **sudo chown -R grader:grader catalog_app/**
+4. Run **cd /var/www/catalog_app/catalog_app**
+5. Run **mv application.py __init__.py**
+6. Run **nano __init__.py** and update the following:
+    * Comment this out - CLIENT_ID = json.loads(open('client_secrets.json', 'r').read())['web']['client_id']
+    * Add this line to replace it - **CLIENT_ID = json.loads(open('/var/www/catalog_app/catalog_app/client_secrets.json', 'r').read())['web']['client_id']**
+    * Comment this out - engine = create_engine('sqlite:///category.db') 
+    * Add this line to replace it - **engine = create_engine('postgresql://catalog_app:password@localhost/catalog_app')**
+    * Note you will need to replace 'password' with the actual password you created.
+    * Comment this out - app.debug = True
+    * Comment this out - app.run(host='0.0.0.0', port=5000, threaded=False)
+    * Add this line to replace it - **app.run()**
+7. Run **nano database_setup.py** and update the following:
+    * Comment this out - engine = create_engine('sqlite:///category.db')
+    * Add this line to replace it - **engine = create_engine('postgresql://catalog_app:password@localhost/catalog_app')**
+    * Note you will need to replace 'password' with the actual password you created.
+8. Run **nano category_books.py**
+    * Comment this out - engine = create_engine('sqlite:///category.db')
+    * Add this line to replace it - **engine = create_engine('postgresql://catalog_app:password@localhost/catalog_app')**
+    * Note you will need to replace 'password' with the actual password you created.
 
-##Configure database
-Run **sudo su - postgres**
-Run **psql**
-Run **create role catalog_app with login password 'catalog_app';**
-Run **alter role catalog_app createdb;**
-Run **\q**
-Run **exit**
+## Install python modules
+This section will detail how to setup a virtual env and install the pre-requisite libraries
+1. Run **sudo virtualenv venv**
+2. Run **source venv/bin/activate**
+3. Run **sudo chown -R grader:grader venv/**
+4. Run **pip install -r requirements.txt**
 
-#Setup Database
-Run **su - catalog_app**
-Run **createdb catalog_app**
-
-
-
-
-##Install Apache
-Run **sudo apt-get install apache2**
-In a web browser type in your public ip address (3.16.230.142)
-You should see the "Apache2 Ubuntu Default Page"
-
-##Install WSGI
-Run **sudo apt-get install libapache2-mod-wsgi python-dev**
-**sudo a2enmod wsgi** ??
-**sudo service apache2 start** ??
- cd /var/www/
- sudo git clone https://github.com/aandersland/udacity-full-stack-web-developer-nanodegree.git catalog_app
- sudo chown -R grader:grader catalog_app/
- cd /var/www/catalog_app/catalog_app
- mv application.py __init__.py
- nano __init__.py
- 
- CLIENT_ID = json.loads(open('client_secrets.json', 'r')
-                       .read())['web']['client_id']
-                       
-CLIENT_ID = json.loads(open('/var/www/catalog_app/catalog_app/client_secrets.json', 'r')
-                       .read())['web']['client_id']
- 
- change line 25 engine = create_engine('sqlite:///category.db') to 
- engine = create_engine('postgresql://catalog_app:password@localhost/catalog_app')
- change lines 460/461 from 
-    app.debug = True
-    app.run(host='0.0.0.0', port=5000, threaded=False)
- to 
- app.run()
-
- nano database_setup.py
- line 26 comment
- add  engine = create_engine('postgresql://catalog_app:password@localhost/catalog_app')
-
-nano category_books.py
- comment line 6
- add engine = create_engine('postgresql://catalog_app:**password**@localhost/catalog_app')
-
-python database_setup.py
-python category_books.py
-python __init__.py
-CTRL+C
-deactivate
+##Populate database with data
+This section will detail the steps to setup the database with sample data.
+1. Run **python database_setup.py**
+2. Run **python category_books.py**
+3. Run **python __init__.py**
+    * The application should be running without errors in the command line.
+4. Type CTRL+C to stop the application
+5. Type deactivate to exit the virtual environment.
 
 ## Enable virtual host
-sudo nano /etc/apache2/mods-enabled/wsgi.conf
-add WSGIPythonPath /var/www/catalog_app/catalog_app/venv/lib/python2.7/site-packages
- sudo nano /etc/apache2/sites-available/catalog_app.conf
-
-<VirtualHost *:80>
+This section will setup the Apache configurations for WSGI.
+1. Run **sudo nano /etc/apache2/mods-enabled/wsgi.conf**
+    * Under the WSGIPythonPath add **WSGIPythonPath /var/www/catalog_app/catalog_app/venv/lib/python2.7/site-packages**
+2. Save the file. 
+3. Run **sudo nano /etc/apache2/sites-available/catalog_app.conf**
+    * Add the following to the file or copy the same file in this directory to the server instance.
+**<VirtualHost *:80>
     ServerName 3.16.230.142
     ServerAlias ec2-3.16.230.142.us-east-2a.compute.amazonaws.com
     WSGIScriptAlias / /var/www/catalog_app/catalog_app/catalog_app.wsgi
@@ -197,44 +202,40 @@ add WSGIPythonPath /var/www/catalog_app/catalog_app/venv/lib/python2.7/site-pack
         Order allow,deny
         Allow from all
     </Directory>
-</VirtualHost>
-
-sudo a2ensite catalog_app
-sudo apache2ctl restart
- sudo service apache2 restart
+</VirtualHost>**
+4. Run **sudo a2ensite catalog_app**
+5. **sudo service apache2 restart**
 
 
-
-## Install python modules
-sudo apt-get install python-pip
-sudo apt-get install virtualenv
-sudo virtualenv venv
-source venv/bin/activate
-sudo chown -R grader:grader venv/
-pip install -r requirements.txt
-
-# Google
-Add authorized domain ??? add more info ec2-3.16.230.142.us-east-2a.compute.amazonaws.com
-Add authorized JavaScript origins - https://ec2-3.16.230.142.us-east-2a.compute.amazonaws.com
-https://ec2-3.16.230.142.us-east-2a.compute.amazonaws.com
-https://3.16.230.142
-download json file 
-copy the contents and replace the contents in the client_secret.json file
-copy the clientid from the json file
-nano templates/login.html
-paste the clientid into the data-clientid field
+# Update Google OAuth
+This section will list the changes that are needed to the Google OAuth configuration.
+1. Login to https://console.developers.google.com
+2. Under the OAuth consent screen for your application add this to the authorized domains **ec2-3.16.230.142.us-east-2a.compute.amazonaws.com**
+3. Under the OAuth client id add the following under the 'Authorized Javascript origins':
+    * https://ec2-3.16.230.142.us-east-2a.compute.amazonaws.com
+    * https://3.16.230.142
+    * https://3.16.230.142.xip.io
+4. Save the changes
+5. Under the OAuth client id add the following under the 'Authorized redirect URLs':
+	* https://ec2-3.16.230.142.us-east-2a.compute.amazonaws.com/
+	* https://3.16.230.142.xip.io/catalog/
+6. Save the changes
+7. Download json file for this client id 
+8. Copy the contents of the file
+9. Run **nano /var/www/catalog_app/catalog_app/client_secret.json** and replace the contents in the file 
+10. Copy the clientid value from the json file
+11. Run **nano /var/www/catalog_app/catalog_app/templates/login.html** and replace the existing clientid into the data-clientid field
 
 ## Change the server timezone to UTC
-Run **sudo dpkg-reconfigure tzdata**
-Select **None of the above** and hit enter
-Select **UTC** and hit enter
-#???? add requirements.txt to base project
+This section will update the timestamp of the server to UTC
+1. Run **sudo dpkg-reconfigure tzdata**
+2. Select **None of the above** and hit enter
+3. Select **UTC** and hit enter
 
 ## Disable default site
-sudo a2dissite 000-default.conf
-sudo service apache2 reload
-
-http://3.16.230.142/
+This section will disable the default Apache site for security.
+1. Run **sudo a2dissite 000-default.conf**
+2. Run **sudo service apache2 reload**
 
 ## Folder Structure
  * /var/www/catalog_app/catalog_app/
@@ -245,10 +246,8 @@ http://3.16.230.142/
  * /var/www/catalog_app/catalog_app/client_secrets.json - secrets file (you provide)
  * /var/www/catalog_app/catalog_app/static - contains css file
  * /var/www/catalog_app/catalog_app/templates - contains html files
- 
 
-
-# Resources
+## Resources
 * https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-key-pairs.html#retrieving-the-public-key-windows
 * https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/managing-users.html
 * https://www.google.com/search?q=configure+linux+local+time+to+utc&oq=configure+linux+local+time+to+utc&aqs=chrome..69i57.7352j0j7&sourceid=chrome&ie=UTF-8
@@ -265,77 +264,3 @@ http://3.16.230.142/
 * https://www.digitalocean.com/community/tutorials/how-to-use-postgresql-with-your-django-application-on-ubuntu-14-04
 * https://gist.github.com/shyamgupta/d8ba035403e8165510585b805cf64ee6
 * https://www.digitalocean.com/community/tutorials/how-to-deploy-a-flask-application-on-an-ubuntu-vps
-
-
-
-
---------------------
-install pip virtualvenv
-sudo apt-get install virtualbox
-sudo apt-get install vagrant
-cd dir
-vagrant up
-
------
-git clone
-copy files to /var/www/catalog_app
-rename application.py to __init__.py
-virtualenv venv
-** add requirements to project
-pip install -r requirements.txt
-pip install --upgrade pip
-
-create /var/www/catalog_app/application.wsgi
-
-create catalog_app.conf 
-nano /etc/apache2/sites-available/catalog_app.conf
-
-update client_secrets.json with secret
-
-sudo nano /etc/apache2/sites-enabled/000-default.conf
-WSGIScriptAlias / /var/www/catalog_app/application.wsgi
-sudo apache2ctl restart
-
-
-Note: When you set up OAuth for your application, you will need a DNS name that refers to your instance's IP address. You can use the xip.io service to get one; this is a public service offered for free by Basecamp. For instance, the DNS name 54.84.49.254.xip.io refers to the server above.
-
-Requirement already satisfied: Werkzeug==0.14.1 in /usr/local/lib/python2.7/dist-packages (from -r requirements.txt (line 27)) (0.14.1)
-
-sudo chown -R ubuntu:ubuntu catalog_app
-
-sudo a2ensite catalog_app
-sudo service apache2 reload
-sudo chown -R grader:grader catalog_app
-
-source venv/bin/activate $ sudo chmod -R 777 venv
-
-apt-get -qqy install make zip unzip postgresql
-sudo su - postgres
-psql
-create user category with password 'category';
-alter user category createdb;
-create database category with owner category;
-\c category
-grant all on schema public to category;
-grant all on schema public to catalog;
-\q 
-exit
-
-???
-sudo apt-get update
-sudo apt-get install postgresql postgresql-contrib
-???
-
-sudo adduser category
-sudo ls /etc/sudoers.d
-sudo cp /etc/sudoers.d/grader /etc/sudoers.d/catalog
-sudo nano /etc/sudoers.d/catalog
-change grader to catalog
-psql
-
-GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public to category;
-GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public to category;
-GRANT ALL PRIVILEGES ON ALL FUNCTIONS IN SCHEMA public to category;
-
-sudo chown -R category:category catalog_app
-sudo chmod 775 catalog_app
