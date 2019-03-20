@@ -74,6 +74,7 @@ This section will create the SSH keys and apply them on the server.
 9. Run **/etc/ssh/sshd_config**
     * Change the Port from **22** to **2200**
     * ensure that PasswordAuthentication = no
+    * ensure PermitRootLogin = no
 10. Run **sudo service ssh restart**
 
 ## Setup Putty SSH connection
@@ -127,6 +128,7 @@ This section will disable the normal SSH port on our server instance.
 This section will install the necessary server/library packages. 
 1. Run **sudo apt-get update**
 2. Run **sudo apt-get upgrade**
+3. Run **sudo apt-get update && sudo apt-get dist-upgrade**
 3. Run **sudo apt-get install postgresql postgresql-contrib**
 4. Run **sudo apt-get install apache2**
     * In a web browser type in your public ip address **3.16.230.142**
@@ -264,3 +266,6 @@ This section will disable the default Apache site for security.
 * https://www.digitalocean.com/community/tutorials/how-to-use-postgresql-with-your-django-application-on-ubuntu-14-04
 * https://gist.github.com/shyamgupta/d8ba035403e8165510585b805cf64ee6
 * https://www.digitalocean.com/community/tutorials/how-to-deploy-a-flask-application-on-an-ubuntu-vps
+* https://serverfault.com/questions/265410/ubuntu-server-message-says-packages-can-be-updated-but-apt-get-does-not-update
+* https://askubuntu.com/questions/94102/what-is-the-difference-between-apt-get-update-and-upgrade
+* http://manpages.ubuntu.com/manpages/xenial/en/man5/sshd_config.5.html
